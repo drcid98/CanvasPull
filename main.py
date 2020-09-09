@@ -7,6 +7,8 @@ from datetime import datetime
 import zipfile
 import threading
 
+# this comment is a test
+
 
 def existing_directory(path):
     if not os.path.exists(path):
@@ -96,6 +98,7 @@ def download_files(path, endpoint):
             files = files_response.json()
             
             for folder in folders:
+                print(folder)
                 folder_name = folder['name']
                 if not folder_exists(os.path.join(path, folder_name)):
                     os.mkdir(os.path.join(path, folder_name))
