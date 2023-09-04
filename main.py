@@ -9,28 +9,78 @@ def existing_directory(path):
         raise argparse.ArgumentTypeError(f"Directory '{path}' does not exist")
     return path
 
-def download_course(id, path, endpoint):
-    # print(endpoint)
+def folder_exists(path):
+    if not os.path.isdir(path):
+        return False
+    return True
+
+def file_exists(path):
+    if not os.path.isfile(path):
+        return False
+    return True
+
+
+# Esta sirve para cuando ponga un flag o algo en el que permita verificar archivos
+# que han sido modificados
+def files_are_equal_size(file_1, size_file_2):
+    if os.path.getsize(file_1) == size_file_2:
+        return True
+    return False
+   
+    
+
+def download_files(path, endpoint):
     response = requests.get(endpoint, params={'per_page': 1000})
-    # print(response.status_code)
-    allFiles = response.json()[0]
-    print(json.dumps(allFiles, indent=4))
+    allFiles = response.json()
+    # print("endpoint: ", endpoint)
+    # print("json completo:")
+    # print(json.dumps(allFiles, indent=4))
+    # print("Entro al for")    
     
-    foldersEndpoint = allFiles['folders_url']
-    filesEndpoint = allFiles['files_url']
-    # print(foldersEndpoint)
-    
-    folderResponse = requests.get(foldersEndpoint + "?access_token=" + os.getenv('TOKEN'),
-                                  params={'per_page': 1000})
-    filesResponse = requests.get(filesEndpoint + "?access_token=" + os.getenv('TOKEN'),
-                                 params={'per_page': 1000})
-    folders = folderResponse.json()
-    files = filesResponse.json()
-    print("Carpetas: ")
-    print(json.dumps(folders, indent=4))
-    print("Archivos fuera de carpetas:")
-    print(json.dumps(files, indent=4))
-    
+    for file in allFiles:
+        
+        try:
+            urlDownload = file['url']
+            fileName = file['display_name']
+            if not file_exists(os.path.join(path, fileName)):
+                    r = requests.get(file['url'], allow_redirects=True)
+                    open(os.path.join(path, fileName), 'wb').write(r.content)
+        except KeyError:
+            foldersEndpoint = file['folders_url']
+            filesEndpoint = file['files_url']
+            
+            folderResponse = requests.get(foldersEndpoint + "?access_token=" + os.getenv('TOKEN'),
+                                        params={'per_page': 1000})
+            filesResponse = requests.get(filesEndpoint + "?access_token=" + os.getenv('TOKEN'),
+                                        params={'per_page': 1000})
+            folders = folderResponse.json()
+            files = filesResponse.json()
+
+            # print("Carpetas: ")
+            for folder in folders:
+                if not folder_exists(os.path.join(path, folder['name'])):
+                    os.mkdir(os.path.join(path, folder['name']))
+                
+                # print(json.dumps(folder, indent=4))
+                number_of_files = folder['files_count']
+                number_of_folders = folder['folders_count']
+                
+                if number_of_folders != 0:
+                    download_files(os.path.join(path, folder['name']),
+                                   folder['folders_url'] + "?access_token=" + os.getenv('TOKEN'))
+                
+                if number_of_files != 0:
+                    download_files(os.path.join(path, folder['name']),
+                                   folder['files_url'] + "?access_token=" + os.getenv('TOKEN') )
+
+            for file in files:
+                # print(json.dumps(file, indent=4))
+                fileName = file['display_name']
+                if not file_exists(os.path.join(path, fileName)):
+                    r = requests.get(file['url'], allow_redirects=True)
+                    open(os.path.join(path, fileName), 'wb').write(r.content)
+                
+        
     
     
 load_dotenv()
@@ -68,7 +118,6 @@ args = parser.parse_args()
 
 
 if args.output:
-    
     print("Descargando archivos en path: ", args.output)
     PATH_TO_DOWNLOAD = args.output
 
@@ -109,7 +158,8 @@ if number_of_courses == 1:
     API_COURSES_FILES += f"/courses/{final_course['id']}/files?access_token={TOKEN}"
     API_COURSES_FOLDERS = API + f"/courses/{final_course['id']}/folders/by_path?access_token={TOKEN}"
     # API_COURSES_FILES += f"/users/{course['enrollments'][0]['user_id']}/files?access_token={TOKEN}"
-    download_course(final_course['id'], PATH_TO_DOWNLOAD, API_COURSES_FOLDERS)
+    
+    download_files(PATH_TO_DOWNLOAD, API_COURSES_FOLDERS)
     # print("Curso: ", course)
     
 elif number_of_courses == 0:
