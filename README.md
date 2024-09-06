@@ -21,11 +21,11 @@ Once you have that ready, you should be able to execute the program using `pytho
 
 I understand that using this from the folder you cloned the repo and trying to update or download the files of a course in a very different folder can be a little tedious. In order to fix that, you can set up an alias so you can execute the file in a more simple way from any directory you're in. If you're using linux or wsl you can follow these steps:
 
-1. Find out what shell you're using. You're probably using a `bash` shell, but you may have a `zsh` shell too.
+1. Find out what shell you're using. You're probably using a `bash` shell, but you may have a `zsh` shell.
 2. Once you are sure about which shell you have, open the `.bashrc` or `.zshrc` file in your home directory
 3. Add a line line the following: `alias your-alias='python /path/to/file/main.py`.
 4. You can close and reopen the terminal or just use `source ~/.bashrc` (in case you're using a bash shell).
 5. You should be ready to use the script anywhere you are.
 
 If you're using MAC, you may be able to do something very similar, but since I don't have access to one, I cannot confirm the exact steps.
-If you're using windows, I don't have a method for you yet but I'm working on it.
+If you're using windows, good luck figuring it out.
